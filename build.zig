@@ -12,6 +12,11 @@ pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
 
     const exe = b.addExecutable("zig-engine", "src/test.zig");
+
+    exe.linkSystemLibrary("c");
+    exe.linkSystemLibrary("xcb");
+    exe.linkSystemLibrary("X11-xcb");
+
     exe.setTarget(target);
     exe.setBuildMode(mode);
 

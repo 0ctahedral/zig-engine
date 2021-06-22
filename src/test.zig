@@ -2,7 +2,7 @@ const std = @import("std");
 const engine = @import("engine");
 
 fn dummy() void {
-    std.log.info("hehe", .{});
+//    std.log.info("hehe", .{});
 }
 
 pub fn main() anyerror!void {
