@@ -1,3 +1,4 @@
+const plat = @import("../platform/platform.zig");
 pub const App = struct {
     runFn: fn () void,
 
