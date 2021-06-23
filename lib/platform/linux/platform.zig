@@ -4,7 +4,7 @@ const os = std.os;
 const Window = @import("../window.zig");
 const LinuxWindow = @import("window.zig").LinuxWindow;
 const Geom = @import("../window.zig").Geom;
-const Event = @import("../event.zig").Event;
+const Event = @import("../../core/event.zig").Event;
 
 usingnamespace @import("xcb_decls.zig");
 
@@ -92,6 +92,12 @@ pub fn flushMsg() ?Event {
                     }
                 }
             },
+            XCB_BUTTON_PRESS => {},
+            XCB_BUTTON_RELEASE => {},
+            XCB_MOTION_NOTIFY => {},
+            // for resizes
+            XCB_CONFIGURE_NOTIFY => {},
+            //else => |ev| std.log.info("event: {}", .{ev}),
             else => {},
         }
         _ = xcb_flush(connection);

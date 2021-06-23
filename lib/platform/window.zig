@@ -1,5 +1,4 @@
 const std = @import("std");
-const Event = @import("event.zig").Event;
 
 /// window geometry
 pub const Geom = struct {

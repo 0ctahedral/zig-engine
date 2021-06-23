@@ -1,5 +1,4 @@
 const std = @import("std");
-const Event = @import("../event.zig").Event;
 const Window = @import("../window.zig");
 const Geom = @import("../window.zig").Geom;
 usingnamespace @import("xcb_decls.zig");

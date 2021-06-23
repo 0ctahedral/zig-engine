@@ -163,6 +163,7 @@ pub const XCB_CLIENT_MESSAGE = @as(c_int, 33);
 pub const XCB_BUTTON_PRESS = @as(c_int, 4);
 pub const XCB_BUTTON_RELEASE = @as(c_int, 5);
 pub const XCB_MOTION_NOTIFY = @as(c_int, 6);
+pub const XCB_CONFIGURE_NOTIFY = @as(c_int, 22);
 
 pub extern fn XGetXCBConnection(dpy: *Display) *xcb_connection_t;
 pub extern fn XOpenDisplay(?[*]u8) ?*Display;

@@ -24,10 +24,10 @@ pub const App = struct {
             // flush platform
             // TODO: add to message queue
             while (platform.flushMsg()) |event| {
-                switch (event) {
-                    //.WindowClose => |id| std.log.info("close window: {}", .{id}),
-                    else => continue,
-                }
+                //switch (event) {
+                //    //.WindowClose => |id| std.log.info("close window: {}", .{id}),
+                //    else => continue,
+                //}
             }
             self.runFn();
         }

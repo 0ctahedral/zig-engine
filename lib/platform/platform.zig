@@ -1,7 +1,7 @@
 const std = @import("std");
 pub const Window = @import("window.zig");
 const Geom = @import("window.zig").Geom;
-const Event = @import("event.zig").Event;
+const Event = @import("../core/event.zig").Event;
 
 const Allocator = std.mem.Allocator;
 
