@@ -164,8 +164,8 @@ pub fn wasBtnUp(b: mouse_btns) bool {
 /// get the current mouse position
 pub fn getMousePosition() struct {x: i32, y:i32} {
     return .{
-        state.mouse_curr.x,
-        state.mouse_curr.y,
+        .x = state.mouse_curr.x,
+        .y = state.mouse_curr.y,
     };
 }
 

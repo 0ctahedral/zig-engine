@@ -94,23 +94,10 @@ pub fn flushMsg() void {
                     }
                 }
             },
-            XCB_BUTTON_PRESS => {
-                const kev = @ptrCast(*xcb_key_press_event_t, event);
-                var btn: input.mouse_btns = undefined;
-                switch (kev.detail) {
-                    1 => btn = input.mouse_btns.left,
-                    2 => btn = input.mouse_btns.middle,
-                    3 => btn = input.mouse_btns.right,
-                    else => {
-                        // TODO: use buttons 4 and 5 to add scrolling
-                        std.log.info("button press: {}", .{kev.detail});
-                        btn = input.mouse_btns.other;
-                    },
-                }
-                input.processMouseBtn(btn, true);
-            },
+            XCB_BUTTON_PRESS,
             XCB_BUTTON_RELEASE => {
                 const kev = @ptrCast(*xcb_key_press_event_t, event);
+                const pressed = kev.response_type == XCB_BUTTON_PRESS;
                 var btn: input.mouse_btns = undefined;
                 switch (kev.detail) {
                     1 => btn = input.mouse_btns.left,
@@ -122,9 +109,12 @@ pub fn flushMsg() void {
                         btn = input.mouse_btns.other;
                     },
                 }
-                input.processMouseBtn(btn, false);
+                input.processMouseBtn(btn, pressed);
             },
-            XCB_MOTION_NOTIFY => {},
+            XCB_MOTION_NOTIFY => {
+                const motion = @ptrCast(*xcb_motion_notify_event_t, event);
+                input.processMouseMove(motion.event_x, motion.event_y);
+            },
             // for resizes
             XCB_CONFIGURE_NOTIFY => {},
             //else => |ev| std.log.info("event: {}", .{ev}),
