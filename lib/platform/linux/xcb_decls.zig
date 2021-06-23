@@ -153,6 +153,8 @@ pub const XCB_PROP_MODE_REPLACE = 0;
 pub const XCB_PROP_MODE_PREPEND = 1;
 pub const XCB_PROP_MODE_APPEND = 2;
 
+pub const XCB_ATOM_WM_NAME = 39;
+pub const XCB_ATOM_STRING = 31;
 
 // events we might use TODO: add more
 pub const XCB_KEY_PRESS = @as(c_int, 2);

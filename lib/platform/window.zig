@@ -1,6 +1,7 @@
 const std = @import("std");
 const Event = @import("event.zig").Event;
 
+/// window geometry
 pub const Geom = struct {
     x: i16,
     y: i16,
@@ -9,14 +10,11 @@ pub const Geom = struct {
 };
 const Window = @This();
 
+/// Cross platform way of refering to this window
 id: usize,
-flushFn: fn (*Window) ?Event,
-deinitFn: fn (*Window) void,
+resizeFn: fn (*Window, Geom) void,
 
-pub fn flush(self: *Window) ?Event {
-    return self.flushFn(self);
+/// resize the window, given the new geometry
+pub fn resize(self: *Window, geom: Geom) void {
+    return self.resizeFn(self, geom);
 }
-
-//pub fn deinit(self: *Window) void {
-//    self.deinitFn(self);
-//}

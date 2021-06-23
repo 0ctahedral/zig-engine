@@ -19,8 +19,7 @@ pub fn deinit() void {
 }
 
 /// Poll for events from the platform
-//pub fn flushMsg() ?Event {
-pub fn flushMsg() void {
+pub fn flushMsg() ?Event {
     return backend.flushMsg();
 }
 
@@ -31,6 +30,7 @@ pub fn createWindow(
     return backend.createWindow(title, geom);
 }
 
+// TODO get rid of this, it should be the responisibility of the app
 pub fn shouldQuit() bool {
     return backend.shouldQuit();
 }

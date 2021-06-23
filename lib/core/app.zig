@@ -13,9 +13,8 @@ pub const App = struct {
         try platform.init();
         // window things
         self.windows = std.ArrayList(*platform.Window).init(platform.allocator);
-        try self.windows.append(try platform.createWindow("title", .{.x=100, .y=100, .w=500, .h=500}));
-        try self.windows.append(try platform.createWindow("title", .{.x=100, .y=100, .w=200, .h=200}));
-
+        try self.windows.append(try platform.createWindow("title1", .{.x=100, .y=100, .w=200, .h=200}));
+        try self.windows.append(try platform.createWindow("title2", .{.x=100, .y=100, .w=200, .h=200}));
     }
 
     // TODO: suspend and stopped states
@@ -23,7 +22,13 @@ pub const App = struct {
     pub fn run(self: *Self) void {
         while (!platform.shouldQuit()) {
             // flush platform
-            //platform.flushMsg();
+            // TODO: add to message queue
+            while (platform.flushMsg()) |event| {
+                switch (event) {
+                    //.WindowClose => |id| std.log.info("close window: {}", .{id}),
+                    else => continue,
+                }
+            }
             self.runFn();
         }
     }

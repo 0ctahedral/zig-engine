@@ -85,6 +85,19 @@ pub const LinuxWindow = struct {
             32,
             1,
             &wm_del);
+        
+        // change the name
+
+        _ = xcb_change_property(
+            connection,
+            XCB_PROP_MODE_REPLACE,
+            window,
+            XCB_ATOM_WM_NAME,
+            XCB_ATOM_STRING,
+            8,  // data should be viewed 8 bits at a time
+            @intCast(u32, title.len),
+            title.ptr
+        );
 
         // Map the window to the screen
         _ = xcb_map_window(connection, window);
@@ -93,6 +106,7 @@ pub const LinuxWindow = struct {
             return error.xcbFlushError;
         }
 
+        std.log.info("linux create window # {}", .{window});
         return Self{
             .connection = connection,
             .window = window,
@@ -101,46 +115,13 @@ pub const LinuxWindow = struct {
             .wm_proto = wm_proto,
             .parent = .{
                 .id = widx,
-                .flushFn = flush,
-                .deinitFn = destroy,
+                .resizeFn = resize,
             },
 
         };
     }
 
-    /// Flushes events from this window
-    fn flush(window: *Window) ?Event {
-        // get ourself from the given window interface
+    fn resize(window: *Window, geom: Geom) void {
         const self = @fieldParentPtr(Self, "parent", window);
-        var ret: ?Event = null;
-        if (xcb_poll_for_event(self.connection)) |event| {
-            // Input events
-            switch (event.*.response_type & ~@as(u32, 0x80)) {
-                XCB_KEY_PRESS => {
-                    const kev = @ptrCast(*xcb_key_press_event_t, event);
-                    ret = Event.KeyPress;
-                },
-                XCB_KEY_RELEASE => {
-                    const kev = @ptrCast(*xcb_key_press_event_t, event);
-                    ret = Event.KeyRelease;
-                },
-                XCB_CLIENT_MESSAGE => {
-                    const cm = @ptrCast(*xcb_client_message_event_t, event);
-                    // Window close
-                    if (cm.*.data.data32[0] == self.wm_del) {
-                        std.log.info("i quit", .{});
-                        ret = Event.WindowClose;
-                    }
-                },
-                else => {},
-            }
-            _ = xcb_flush(self.connection);
-        }
-        return ret;
-    }
-
-    pub fn destroy(window: *Window) void {
-        //const self = @fieldParentPtr(Self, "parent", window);
-        //_ = xcb_destroy_window(self.connection, self.id);
     }
 };

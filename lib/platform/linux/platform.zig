@@ -15,10 +15,11 @@ var connection: *xcb_connection_t = undefined;
 var screen: *xcb_screen_t = undefined;
 
 // TODO: turn this into ringbuffer
-var windows: []LinuxWindow = undefined;
+var windows: []?LinuxWindow = undefined;
 /// idx of last window
 var widx: usize = 0;
-var livingWindows: usize = 0;
+//var window_mask: u8 = 0;
+var living_windows: usize = 0;
 
 var quit = false;
 
@@ -43,18 +44,17 @@ pub fn init() anyerror!void {
     var act = os.Sigaction{
         .handler = .{ .sigaction = handler },
         .mask = os.empty_sigset,
-        //.flags = (os.SA_SIGINFO | os.SA_RESETHAND),
         .flags = (os.SA_SIGINFO | os.SA_RESETHAND),
     };
     os.sigaction(os.SIGINT, &act, null);
 
-    windows = try allocator.alloc(LinuxWindow, 5);
+    windows = try allocator.alloc(?LinuxWindow, 5);
 }
 
 fn handler(sig: i32, info: *const os.siginfo_t, ctx_ptr: ?*const c_void) callconv(.C) void {
+    // TODO: send the quit message and get rid of the platform should quit check
     if (sig == os.SIGINT) {
         quit = true;
-        std.debug.warn("\nShutting down...\n", .{});
     }
 }
 
@@ -64,31 +64,65 @@ pub fn deinit() void {
     std.log.info("linux shutdown", .{});
 }
 
-//pub fn flushMsg() ?Event {
-pub fn flushMsg() void {
-    // TODO: flush events from all windows
-    // TODO: Limit number of events proccessed per frame
-    //return null;
+pub fn flushMsg() ?Event {
+    var i: usize = 0;
+    var ret: ?Event = null;
+    if (xcb_poll_for_event(connection)) |event| {
+        // Input events
+        switch (event.*.response_type & ~@as(u32, 0x80)) {
+            XCB_KEY_PRESS => {
+                const kev = @ptrCast(*xcb_key_press_event_t, event);
+                ret = Event.KeyPress;
+            },
+            XCB_KEY_RELEASE => {
+                const kev = @ptrCast(*xcb_key_press_event_t, event);
+                ret = Event.KeyRelease;
+            },
+            XCB_CLIENT_MESSAGE => {
+                const cm = @ptrCast(*xcb_client_message_event_t, event);
+                // Window close
+                // search through windows to find which one it is equal to
+                for (windows) |win| {
+                    if (win != null and
+                        cm.*.data.data32[0] == win.?.wm_del and 
+                        cm.window == win.?.window
+                        ) {
+                        ret = Event{.WindowClose = cm.window };
+                        destroyWindow(&win.?.parent);
+                    }
+                }
+            },
+            else => {},
+        }
+        _ = xcb_flush(connection);
+    }
+    return null;
 }
 
-pub fn destroyWindow(window: *Window) void {
+pub fn destroyWindow(window: *const Window) void {
     // get the id of the linux window
-    std.log.info("there are {} windows. destroying {}", .{widx, window.id});
-    for (windows) |w| {
+    std.log.info("there are {} windows. destroying {}", .{living_windows, window.id});
+
+    // if this window is null then we've already taken care of it
+    if (windows[window.id] == null) {
+        return;
+    }
+
+    var i: usize = 0;
+    while (i < windows.len) : (i+=1) {
         // compare to all our windows
-        if (window.id == w.id) {
+        if (window.id == i) {
             // if we are about to destroy the last window then  turn autorepeat back on
-            if (livingWindows == 1) {
-                std.log.info("about to destroy last window", .{});
+            if (living_windows == 1) {
                 _ = XAutoRepeatOn(display);
             }
-            _ = xcb_destroy_window(connection, w.window);
-            livingWindows -= 1;
+            _ = xcb_destroy_window(connection, windows[window.id].?.window);
+            living_windows -= 1;
+            // remove from windows list
+            windows[window.id] = null;
             return;
         }
     }
-    // remove from windows list
-    // or will that invalidate a pointer?
 }
 
 pub fn createWindow(
@@ -99,11 +133,10 @@ pub fn createWindow(
         return error.TooManyWindows;
     }
 
-    std.log.info("linux create window", .{});
     // fill that sucker in
     windows[widx] = try LinuxWindow.init(widx, connection, screen, title, geom);
     widx += 1;
-    livingWindows += 1;
+    living_windows += 1;
 
-    return &windows[widx-1].parent;
+    return &windows[widx-1].?.parent;
 }
