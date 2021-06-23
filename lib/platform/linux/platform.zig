@@ -6,6 +6,8 @@ const LinuxWindow = @import("window.zig").LinuxWindow;
 const Geom = @import("../window.zig").Geom;
 const Event = @import("../../core/event.zig").Event;
 
+const input = @import("../../core/input.zig");
+
 usingnamespace @import("xcb_decls.zig");
 
 pub const allocator = std.heap.page_allocator;
@@ -64,7 +66,7 @@ pub fn deinit() void {
     std.log.info("linux shutdown", .{});
 }
 
-pub fn flushMsg() ?Event {
+pub fn flushMsg() void {
     var i: usize = 0;
     var ret: ?Event = null;
     if (xcb_poll_for_event(connection)) |event| {
@@ -92,8 +94,36 @@ pub fn flushMsg() ?Event {
                     }
                 }
             },
-            XCB_BUTTON_PRESS => {},
-            XCB_BUTTON_RELEASE => {},
+            XCB_BUTTON_PRESS => {
+                const kev = @ptrCast(*xcb_key_press_event_t, event);
+                var btn: input.mouse_btns = undefined;
+                switch (kev.detail) {
+                    1 => btn = input.mouse_btns.left,
+                    2 => btn = input.mouse_btns.middle,
+                    3 => btn = input.mouse_btns.right,
+                    else => {
+                        // TODO: use buttons 4 and 5 to add scrolling
+                        std.log.info("button press: {}", .{kev.detail});
+                        btn = input.mouse_btns.other;
+                    },
+                }
+                input.processMouseBtn(btn, true);
+            },
+            XCB_BUTTON_RELEASE => {
+                const kev = @ptrCast(*xcb_key_press_event_t, event);
+                var btn: input.mouse_btns = undefined;
+                switch (kev.detail) {
+                    1 => btn = input.mouse_btns.left,
+                    2 => btn = input.mouse_btns.middle,
+                    3 => btn = input.mouse_btns.right,
+                    else => {
+                        // TODO: use buttons 4 and 5 to add scrolling
+                        std.log.info("button press: {}", .{kev.detail});
+                        btn = input.mouse_btns.other;
+                    },
+                }
+                input.processMouseBtn(btn, false);
+            },
             XCB_MOTION_NOTIFY => {},
             // for resizes
             XCB_CONFIGURE_NOTIFY => {},
@@ -102,7 +132,6 @@ pub fn flushMsg() ?Event {
         }
         _ = xcb_flush(connection);
     }
-    return null;
 }
 
 pub fn destroyWindow(window: *const Window) void {

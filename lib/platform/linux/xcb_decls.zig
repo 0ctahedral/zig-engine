@@ -104,6 +104,25 @@ pub const xcb_generic_event_t = extern struct {
     full_sequence: u32,
 };
 
+pub const xcb_button_t = u8;
+pub const xcb_button_press_event_t = struct {
+    response_type: u8,
+    detail: xcb_button_t,
+    sequence: u16,
+    time: xcb_timestamp_t,
+    root: xcb_window_t,
+    event: xcb_window_t,
+    child: xcb_window_t,
+    root_x: i16,
+    root_y: i16,
+    event_x: i16,
+    event_y: i16,
+    state: u16,
+    same_screen: u8,
+    pad0: u8,
+};
+pub const xcb_button_release_event_t = xcb_button_press_event_t;
+
 pub const XCB_CW_BACK_PIXMAP = 1;
 pub const XCB_CW_BACK_PIXEL = 2;
 pub const XCB_CW_BORDER_PIXMAP = 4;

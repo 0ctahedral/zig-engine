@@ -1,4 +1,5 @@
 //! input events and tracking
+const std = @import("std");
 
 // TODO: add event sending
 
@@ -8,13 +9,15 @@ pub const keys = enum {
 };
 
 /// State of all keys
-const keymap = struct {};
+const keyboard_state = struct {};
 
 /// enum of mouse buttons
 pub const mouse_btns = enum {
     left,
     right,
     middle,
+    // todo: 
+    other,
 };
 
 // TODO: add controller
@@ -28,10 +31,14 @@ const mouse_state = struct {
 };
 
 const input_state = struct {
-    keyboard_prev: keymap = .{},
-    keyboard_curr: keymap = .{},
-    mouse_prev: mouse_state = .{},
-    mouse_curr: mouse_state = .{},
+    keyboard_prev: keyboard_state = .{},
+    keyboard_curr: keyboard_state = .{},
+    mouse_prev: mouse_state = .{
+        .buttons = [_]bool{false} **  @typeInfo(mouse_btns).Enum.fields.len,
+    },
+    mouse_curr: mouse_state = .{
+        .buttons = [_]bool{false} **  @typeInfo(mouse_btns).Enum.fields.len,
+    },
 };
 
 var initialized = false;
@@ -47,13 +54,15 @@ pub fn deinit() void {
     initialized = false;
 }
 
-pub fn update() void {
+pub fn update(dt: f64) void {
     if (!initialized) {
         std.log.err("input not initialized", .{});
         return;
     }
 
     // copy state from current to prev
+    state.keyboard_prev = state.keyboard_curr;
+    state.mouse_prev = state.mouse_curr;
 }
 
 // keyboard stuff
@@ -98,7 +107,7 @@ pub fn wasKeyUp(k: keys) bool {
     return state.keyboard_prev[@enumToInt(k)] == false;
 }
 
-fn processKey(k: keys, pressed: bool) void {
+pub fn processKey(k: keys, pressed: bool) void {
     if (!initialized) {
         std.log.err("input not initialized", .{});
         return;
@@ -169,20 +178,20 @@ pub fn getMousePrevPosition() struct {x: i32, y:i32} {
 }
 
 /// change state based on mouse button pressed
-fn processMouseBtn(b: mouse_btns, pressed: bool) void {
+pub fn processMouseBtn(b: mouse_btns, pressed: bool) void {
     if (!initialized) {
         std.log.err("input not initialized", .{});
         return;
     }
 
     // if it has actually changed then change the state
-    if (state.mouse_curr[@enumToInt(b)] != pressed) {
-        state.mouse_curr[@enumToInt(b)] = pressed;
+    if (state.mouse_curr.buttons[@enumToInt(b)] != pressed) {
+        state.mouse_curr.buttons[@enumToInt(b)] = pressed;
     }
 }
 
 /// change state based on mouse movement
-fn processMouseMove(x: i16, y: i16) void {
+pub fn processMouseMove(x: i16, y: i16) void {
     if (!initialized) {
         std.log.err("input not initialized", .{});
         return;
@@ -195,7 +204,7 @@ fn processMouseMove(x: i16, y: i16) void {
 }
 
 /// change the state based on mousewheel movement
-fn processMouseWheel(delta: i8) void {
+pub fn processMouseWheel(delta: i8) void {
     if (!initialized) {
         std.log.err("input not initialized", .{});
         return;
