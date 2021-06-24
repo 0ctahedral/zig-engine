@@ -217,3 +217,6 @@ pub extern fn xcb_map_window(c: *xcb_connection_t, window: xcb_window_t) xcb_voi
 pub extern fn xcb_flush(c: *xcb_connection_t) c_int;
 pub extern fn xcb_destroy_window(c: *xcb_connection_t, w: xcb_window_t) c_int; 
 pub extern fn xcb_poll_for_event(c: *xcb_connection_t) ?*xcb_generic_event_t;
+
+pub extern fn XkbKeycodeToKeysym(*Display, u8, u32, u32) u32;
+pub const ShiftMask: u8 = 1<<0;
