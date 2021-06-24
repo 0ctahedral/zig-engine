@@ -183,46 +183,38 @@ fn translateKey(code: u32) input.keys {
         //XK_Shift=> input.keys.shift,
         //XK_Control=> input.keys.control,
         XK_Pause=> input.keys.pause,
-        XK_Caps_Lock=> input.keys.capital,
+        XK_Caps_Lock=> input.keys.caps_lock,
         XK_Escape=> input.keys.escape,
 
-        XK_Mode_switch=> input.keys.modechange,
-
         XK_space=> input.keys.space,
-        XK_Prior=> input.keys.prior,
-        XK_Next=> input.keys.next,
+        XK_Prior=> input.keys.page_up,
+        XK_Next=> input.keys.page_down,
         XK_End=> input.keys.end,
         XK_Home=> input.keys.home,
         XK_Left=> input.keys.left,
         XK_Up=> input.keys.up,
         XK_Right=> input.keys.right,
         XK_Down=> input.keys.down,
-        XK_Select=> input.keys.select,
         XK_Print=> input.keys.print,
-        XK_Execute=> input.keys.execute,
         XK_Insert=> input.keys.insert,
         XK_Delete=> input.keys.delete,
-        XK_Help=> input.keys.help,
 
-        XK_Meta_L=> input.keys.lwin,  // TODO=> not sure this is right
-        XK_Meta_R=> input.keys.rwin,
-            // XK_apps=> input.keys.apps, // not supported
+        XK_Meta_L=> input.keys.l_alt,
+        XK_Meta_R=> input.keys.r_alt,
 
-            // XK_sleep=> input.keys.sleep, //not supported
-
-        XK_KP_0=> input.keys.numpad0,
-        XK_KP_1=> input.keys.numpad1,
-        XK_KP_2=> input.keys.numpad2,
-        XK_KP_3=> input.keys.numpad3,
-        XK_KP_4=> input.keys.numpad4,
-        XK_KP_5=> input.keys.numpad5,
-        XK_KP_6=> input.keys.numpad6,
-        XK_KP_7=> input.keys.numpad7,
-        XK_KP_8=> input.keys.numpad8,
-        XK_KP_9=> input.keys.numpad9,
+        XK_parenright, XK_0, XK_KP_0=> input.keys.n0,
+        XK_exclam, XK_1, XK_KP_1=> input.keys.n1,
+        XK_at, XK_2, XK_KP_2=> input.keys.n2,
+        XK_numbersign, XK_3, XK_KP_3=> input.keys.n3,
+        XK_dollar, XK_4, XK_KP_4=> input.keys.n4,
+        XK_percent, XK_5, XK_KP_5=> input.keys.n5,
+        XK_asciicircum, XK_caret, XK_6, XK_KP_6=> input.keys.n6,
+        XK_ampersand, XK_7, XK_KP_7=> input.keys.n7,
+        XK_asterisk, XK_8, XK_KP_8=> input.keys.n8,
+        XK_parenleft, XK_9, XK_KP_9=> input.keys.n9,
         XK_multiply=> input.keys.multiply,
         XK_KP_Add=> input.keys.add,
-        XK_KP_Separator=> input.keys.separator,
+        //XK_KP_Separator=> input.keys.separator,
         XK_KP_Subtract=> input.keys.subtract,
         XK_KP_Decimal=> input.keys.decimal,
         XK_KP_Divide=> input.keys.divide,
@@ -250,25 +242,29 @@ fn translateKey(code: u32) input.keys {
         XK_F22=> input.keys.f22,
         XK_F23=> input.keys.f23,
         XK_F24=> input.keys.f24,
-        XK_Num_Lock=> input.keys.numlock,
-        XK_Scroll_Lock=> input.keys.scroll,
-        XK_KP_Equal=> input.keys.numpad_equal,
+        XK_Num_Lock=> input.keys.num_lock,
+        XK_KP_Equal=> input.keys.equal,
 
-        XK_Shift_L=>
-        input.keys.lshift, XK_Shift_R=>
-        input.keys.rshift, XK_Control_L=>
-        input.keys.lcontrol, XK_Control_R=>
+        XK_Shift_L=> input.keys.l_shift,
+        XK_Shift_R=> input.keys.r_shift,
+        XK_Control_L=> input.keys.l_control,
+        XK_Control_R=> input.keys.r_control, // XK_Menu=> KEY_LMENU,
+        XK_Menu=> input.keys.menu,
 
-        input.keys.rcontrol, // XK_Menu=> KEY_LMENU,
-        XK_Menu=> input.keys.rmenu,
         XK_semicolon=> input.keys.semicolon,
 
-        XK_plus=> input.keys.plus,
+        XK_plus=> input.keys.add, // TODO: add plus?
         XK_comma=> input.keys.comma,
         XK_minus=> input.keys.minus,
         XK_period=> input.keys.period,
         XK_slash=> input.keys.slash,
         XK_grave=> input.keys.grave,
+        XK_asciitilde => input.keys.grave,
+
+        XK_braceleft,
+        XK_bracketleft => input.keys.left_bracket,
+        XK_braceright,
+        XK_bracketright => input.keys.right_bracket,
 
         XK_a, XK_A => input.keys.a,
         XK_b, XK_B => input.keys.b,
@@ -301,6 +297,9 @@ fn translateKey(code: u32) input.keys {
             // => KEY_NONCONVERT,
         // XK_snapshot=> KEY_SNAPSHOT, // not supported
             // => KEY_ACCEPT,
-        else => input.keys.unknown,
+        else => {
+            std.log.info("unknown key: {}", .{code});
+            return input.keys.unknown;
+        },
     };
 }
