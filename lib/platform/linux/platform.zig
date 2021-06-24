@@ -4,7 +4,7 @@ const os = std.os;
 const Window = @import("../window.zig");
 const LinuxWindow = @import("window.zig").LinuxWindow;
 const Geom = @import("../window.zig").Geom;
-const Event = @import("../../core/event.zig").Event;
+const event = @import("../../core/event.zig");
 
 const input = @import("../../core/input.zig");
 
@@ -66,16 +66,16 @@ pub fn deinit() void {
     std.log.info("linux shutdown", .{});
 }
 
-pub fn flushMsg() void {
+pub fn flushMsg() !void {
     var i: usize = 0;
-    var ret: ?Event = null;
-    if (xcb_poll_for_event(connection)) |event| {
+    var ret: ?event.Event = null;
+    if (xcb_poll_for_event(connection)) |ev| {
         // Input events
-        switch (event.*.response_type & ~@as(u32, 0x80)) {
+        switch (ev.*.response_type & ~@as(u32, 0x80)) {
             XCB_KEY_PRESS,
             XCB_KEY_RELEASE => {
-                const kev = @ptrCast(*xcb_key_press_event_t, event);
-                const pressed = event.response_type == XCB_KEY_PRESS;
+                const kev = @ptrCast(*xcb_key_press_event_t, ev);
+                const pressed = kev.response_type == XCB_KEY_PRESS;
 
                 const code = kev.detail;
                 const key_sym = XkbKeycodeToKeysym(
@@ -85,12 +85,11 @@ pub fn flushMsg() void {
                     if (code & ShiftMask == 1) 1 else 0);
 
                 const key = translateKey(key_sym);
-                std.log.info("key pressed: {}", .{key});
-                input.processKey(key, pressed);
+                try input.processKey(key, pressed);
 
             },
             XCB_CLIENT_MESSAGE => {
-                const cm = @ptrCast(*xcb_client_message_event_t, event);
+                const cm = @ptrCast(*xcb_client_message_event_t, ev);
                 // Window close
                 // search through windows to find which one it is equal to
                 for (windows) |win| {
@@ -98,30 +97,30 @@ pub fn flushMsg() void {
                         cm.*.data.data32[0] == win.?.wm_del and 
                         cm.window == win.?.window
                         ) {
-                        ret = Event{.WindowClose = cm.window };
+                        ret = event.Event{.WindowClose = cm.window };
                         destroyWindow(&win.?.parent);
                     }
                 }
             },
             XCB_BUTTON_PRESS,
             XCB_BUTTON_RELEASE => {
-                const kev = @ptrCast(*xcb_key_press_event_t, event);
-                const pressed = kev.response_type == XCB_BUTTON_PRESS;
+                const bev = @ptrCast(*xcb_key_press_event_t, ev);
+                const pressed = bev.response_type == XCB_BUTTON_PRESS;
                 var btn: input.mouse_btns = undefined;
-                switch (kev.detail) {
+                switch (bev.detail) {
                     1 => btn = input.mouse_btns.left,
                     2 => btn = input.mouse_btns.middle,
                     3 => btn = input.mouse_btns.right,
                     else => {
                         // TODO: use buttons 4 and 5 to add scrolling
-                        std.log.info("button press: {}", .{kev.detail});
+                        std.log.info("button press: {}", .{bev.detail});
                         btn = input.mouse_btns.other;
                     },
                 }
                 input.processMouseBtn(btn, pressed);
             },
             XCB_MOTION_NOTIFY => {
-                const motion = @ptrCast(*xcb_motion_notify_event_t, event);
+                const motion = @ptrCast(*xcb_motion_notify_event_t, ev);
                 input.processMouseMove(motion.event_x, motion.event_y);
             },
             // for resizes
@@ -149,6 +148,9 @@ pub fn destroyWindow(window: *const Window) void {
             // if we are about to destroy the last window then  turn autorepeat back on
             if (living_windows == 1) {
                 _ = XAutoRepeatOn(display);
+                event.send(event.Event{.Quit={}}) catch |err| {
+                    std.log.err("could not send quit event", .{});
+                };
             }
             _ = xcb_destroy_window(connection, windows[window.id].?.window);
             living_windows -= 1;

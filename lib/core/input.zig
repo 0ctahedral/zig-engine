@@ -1,5 +1,6 @@
 //! input events and tracking
 const std = @import("std");
+const event = @import("event.zig");
 
 // TODO: add event sending
 
@@ -220,7 +221,7 @@ pub fn wasKeyUp(k: keys) bool {
     return state.keyboard_prev[@enumToInt(k)] == false;
 }
 
-pub fn processKey(k: keys, pressed: bool) void {
+pub fn processKey(k: keys, pressed: bool) !void {
     if (!initialized) {
         std.log.err("input not initialized", .{});
         return;
@@ -229,6 +230,10 @@ pub fn processKey(k: keys, pressed: bool) void {
     // if it has actually changed then change the state
     if (state.keyboard_curr.keys[@enumToInt(k)] != pressed) {
         state.keyboard_curr.keys[@enumToInt(k)] = pressed;
+        // send event
+        const ev= if (pressed) event.Event{.KeyPress=k}
+        else event.Event{.KeyRelease=k};
+        try event.send(ev);
     }
 }
 

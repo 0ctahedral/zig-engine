@@ -19,7 +19,7 @@ pub fn deinit() void {
 }
 
 /// Poll for events from the platform
-pub fn flushMsg() void {
+pub fn flushMsg() !void {
     return backend.flushMsg();
 }
 

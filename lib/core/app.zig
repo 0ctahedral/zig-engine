@@ -1,6 +1,7 @@
 const std = @import("std");
 const platform = @import("../platform/platform.zig");
 const input = @import("input.zig");
+const event = @import("event.zig");
 
 pub const App = struct {
     runFn: fn () void,
@@ -18,11 +19,18 @@ pub const App = struct {
     pub fn init(self: *Self) !void {
         // start platform stuff
         try platform.init();
+        try event.init(platform.allocator);
         try input.init();
         // window things
         self.windows = std.ArrayList(*platform.Window).init(platform.allocator);
         try self.windows.append(try platform.createWindow("title1", .{.x=100, .y=100, .w=200, .h=200}));
         try self.windows.append(try platform.createWindow("title2", .{.x=100, .y=100, .w=200, .h=200}));
+
+        try event.register(event.EventType.Quit, dummy);
+    }
+
+    fn dummy(e: event.Event) void {
+        std.log.info("recieved quit event!", .{});
     }
 
     // TODO: suspend and stopped states
@@ -31,7 +39,9 @@ pub const App = struct {
         while (self.state.is_running) {
             // TODO: add to message queue
             // get input from the os no matter what
-            platform.flushMsg();
+            platform.flushMsg() catch |err| {
+                std.log.err("{}", .{err});
+            };
             // if we are suspended don't do anything else
             if (!self.state.is_suspended) {
                 // frame start time
@@ -53,6 +63,7 @@ pub const App = struct {
 
     pub fn deinit(self: *Self) void {
         input.deinit();
+        event.deinit();
         // shutdown platform stuff
         for (self.windows.items) |win| {
             platform.destroyWindow(win);
