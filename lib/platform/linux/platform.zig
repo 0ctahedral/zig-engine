@@ -86,7 +86,7 @@ pub fn flushMsg() void {
 
                 const key = translateKey(key_sym);
                 std.log.info("key pressed: {}", .{key});
-                input.processKey(key);
+                input.processKey(key, pressed);
 
             },
             XCB_CLIENT_MESSAGE => {
@@ -301,5 +301,6 @@ fn translateKey(code: u32) input.keys {
             // => KEY_NONCONVERT,
         // XK_snapshot=> KEY_SNAPSHOT, // not supported
             // => KEY_ACCEPT,
+        else => input.keys.unknown,
     };
 }

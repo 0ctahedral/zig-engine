@@ -7,7 +7,7 @@ fn dummy() void {
         std.log.info("hehe", .{});
     }
 
-    std.log.info("mouse x: {} y: {}", input.getMousePosition());
+    //std.log.info("mouse x: {} y: {}", input.getMousePosition());
 }
 
 pub fn main() anyerror!void {

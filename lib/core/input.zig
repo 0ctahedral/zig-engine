@@ -4,7 +4,7 @@ const std = @import("std");
 // TODO: add event sending
 
 /// enum of all internal keycodes
-pub const keys = enum {
+pub const keys = enum(u16) {
     backspace = 0x08,
     enter = 0x0D,
     tab = 0x09,
@@ -131,10 +131,14 @@ pub const keys = enum {
     period = 0xbe,
     slash = 0xbf,
     grave = 0xc0,
+
+    unknown = 0x00,
 };
 
 /// State of all keys
-const keyboard_state = struct {};
+const keyboard_state = struct {
+    keys: [256]bool = [_]bool{false} ** 256,
+};
 
 /// enum of mouse buttons
 pub const mouse_btns = enum {
@@ -199,7 +203,7 @@ pub fn isKeyDown(k: keys) bool {
         return false;
     }
 
-    return state.keyboard_curr[@enumToInt(k)] == true;
+    return state.keyboard_curr.keys[@enumToInt(k)] == true;
 }
 
 /// is the given key up this frame
@@ -239,8 +243,8 @@ pub fn processKey(k: keys, pressed: bool) void {
     }
 
     // if it has actually changed then change the state
-    if (state.keyboard_curr[@enumToInt(k)] != pressed) {
-        state.keyboard_curr[@enumToInt(k)] = pressed;
+    if (state.keyboard_curr.keys[@enumToInt(k)] != pressed) {
+        state.keyboard_curr.keys[@enumToInt(k)] = pressed;
     }
 }
 
