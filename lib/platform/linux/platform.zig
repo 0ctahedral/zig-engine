@@ -23,12 +23,6 @@ var widx: usize = 0;
 //var window_mask: u8 = 0;
 var living_windows: usize = 0;
 
-var quit = false;
-
-pub fn shouldQuit() bool {
-    return quit;
-}
-
 pub fn init() anyerror!void {
     std.log.info("linux startup", .{});
 
@@ -56,7 +50,7 @@ pub fn init() anyerror!void {
 fn handler(sig: i32, info: *const os.siginfo_t, ctx_ptr: ?*const c_void) callconv(.C) void {
     // TODO: send the quit message and get rid of the platform should quit check
     if (sig == os.SIGINT) {
-        quit = true;
+        event.send(event.Event{.Quit={}});
     }
 }
 

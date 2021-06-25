@@ -29,18 +29,22 @@ pub const Event = union(EventType) {
     MouseMoved: struct {x: i16, y: i16},
 };
 
+/// Helper types
+/// otype is an opaque pointer
+const otype = *opaque{};
+/// ofunc is a function pinter 
+const ofunc = fn(otype, Event)void;
 /// An event callback that has been registered with this system
-const listener = struct {
-    // TODO: keep track of listener object?
-    func: fn(Event)void,
+const entry = struct {
+    fptr: otype,
+    lptr: ofunc,
 };
-
-/// ArrayList of listeners to a specific event
+/// ArrayList of entries to a specific event
 const event_entry = struct {
-    listeners: ?std.ArrayList(listener) = null,
+    entries: ?std.ArrayList(entry) = null,
 };
 
-/// stores all the event listeners
+/// stores all the event entries
 const eventState = struct {
     // array of registered events
     registered: [@typeInfo(EventType).Enum.fields.len]event_entry,
@@ -66,14 +70,14 @@ pub fn deinit() void {
     initialized = false;
     // destroy arraylists
     for (state.registered) |ee| {
-        if (ee.listeners != null) {
-            ee.listeners.?.deinit();
+        if (ee.entries != null) {
+            ee.entries.?.deinit();
         }
     }
 }
 
 /// Register a callback for a specific event
-pub fn register(event: EventType, func: fn(Event)void) !void {
+pub fn register(event: EventType, comptime T: type, listener: *T, func: fn(*T, Event)void) !void {
     if (!initialized) {
         return error.NotInitialized;
     }
@@ -82,18 +86,18 @@ pub fn register(event: EventType, func: fn(Event)void) !void {
 
     // get the event we want to register
     // if it is null, create the arraylist
-    if (state.registered[@enumToInt(event)].listeners == null) {
-        state.registered[@enumToInt(event)].listeners = std.ArrayList(listener).init(allocator);
+    if (state.registered[@enumToInt(event)].entries == null) {
+        state.registered[@enumToInt(event)].entries = std.ArrayList(entry).init(allocator);
     }
     // check if this function pointer is in the arraylist
-    for (state.registered[@enumToInt(event)].listeners.?.items) |l| {
-        if (l.func == func) {
+    for (state.registered[@enumToInt(event)].entries.?.items) |l| {
+        if (l.fptr == func) {
             return;
         }
     }
     // add to arraylist
-    try state.registered[@enumToInt(event)].listeners.?.append(
-        .{.func = func});
+    try state.registered[@enumToInt(event)].entries.?.append(entry(T, listener, func){});
+
 }
 
 pub fn unregister(event: EventType, func: fn(Event)void) !void {
@@ -102,17 +106,17 @@ pub fn unregister(event: EventType, func: fn(Event)void) !void {
     }
     // get the event we want to unregister
     // if it is null, return
-    if (state.registered[@enumToInt(event)].listeners == null) {
+    if (state.registered[@enumToInt(event)].entries == null) {
         return;
     }
-    var items = state.registered[@enumToInt(event)].listeners.?.items;
+    var items = state.registered[@enumToInt(event)].entries.?.items;
     // check if this function pointer is in the arraylist
     // remove from arraylist
     var i: usize = 0;
     while (i < items.len)
         : (i+=1) {
             if (items[i].func == func) {
-                _ = state.registered[@enumToInt(event)].listeners.?.swapRemove(i);
+                _ = state.registered[@enumToInt(event)].entries.?.swapRemove(i);
             }
         }
 }
@@ -127,11 +131,11 @@ pub fn send(event: Event) !void {
 
     // get the event we want to send
     // if it is null, return error
-    if (state.registered[@enumToInt(event)].listeners == null) {
+    if (state.registered[@enumToInt(event)].entries == null) {
         return;
     }
-    // otherwise, find all listeners and send the event
-    for (state.registered[@enumToInt(event)].listeners.?.items) |l| {
-        l.func(event);
+    // otherwise, find all entries and send the event
+    for (state.registered[@enumToInt(event)].entries.?.items) |l| {
+        l.fptr(l.lptr, event);
     }
 }

@@ -26,11 +26,12 @@ pub const App = struct {
         try self.windows.append(try platform.createWindow("title1", .{.x=100, .y=100, .w=200, .h=200}));
         try self.windows.append(try platform.createWindow("title2", .{.x=100, .y=100, .w=200, .h=200}));
 
-        try event.register(event.EventType.Quit, dummy);
+        try event.register(event.EventType.Quit, Self, self, quit);
     }
 
-    fn dummy(e: event.Event) void {
+    fn quit(self: *Self, e: event.Event) void {
         std.log.info("recieved quit event!", .{});
+        self.state.is_running = false;
     }
 
     // TODO: suspend and stopped states
@@ -57,7 +58,7 @@ pub const App = struct {
                 input.update(0);
                 // update app time
             }
-            self.state.is_running = !platform.shouldQuit();
+            //self.state.is_running = !platform.shouldQuit();
         }
     }
 
