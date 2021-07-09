@@ -19,14 +19,14 @@ pub const App = struct {
     pub fn init(self: *Self) !void {
         // start platform stuff
         try platform.init();
-        try event.init(platform.allocator);
+        event.init(platform.allocator);
         try input.init();
         // window things
         self.windows = std.ArrayList(*platform.Window).init(platform.allocator);
         try self.windows.append(try platform.createWindow("title1", .{.x=100, .y=100, .w=200, .h=200}));
         try self.windows.append(try platform.createWindow("title2", .{.x=100, .y=100, .w=200, .h=200}));
 
-        try event.register(event.EventType.Quit, Self, self, quit);
+        try event.register(event.EventType.Quit, self, quit);
     }
 
     fn quit(self: *Self, e: event.Event) void {

@@ -50,7 +50,9 @@ pub fn init() anyerror!void {
 fn handler(sig: i32, info: *const os.siginfo_t, ctx_ptr: ?*const c_void) callconv(.C) void {
     // TODO: send the quit message and get rid of the platform should quit check
     if (sig == os.SIGINT) {
-        event.send(event.Event{.Quit={}});
+        event.send(event.Event{.Quit={}}) catch |err| {
+
+        };
     }
 }
 
