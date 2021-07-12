@@ -1,4 +1,9 @@
 //! Event subsystem
+//! Any callback registered to recieve events is uniquely identified by the
+//! specific event and the funciton and object pointers.
+//! This means the same object can register for multiple events,
+//! and that multiple objects of the same type can register for the same event
+//! with the same function.
 const std = @import("std");
 const testing = std.testing;
 const input = @import("input.zig");
@@ -70,7 +75,6 @@ pub fn register(event: EventType, obj: anytype, func: anytype) !void {
     std.log.info("registering event: {}", .{event});
 
     // check if we already have this one
-    // TODO: should this throw an error?
     const optr = @ptrCast(opaqueT, obj);
     for (Callbacks[@enumToInt(event)].items) |c| {
         if (c.obj == optr) {
@@ -91,7 +95,25 @@ pub fn unregister(event: EventType, obj: anytype, func: anytype) !void {
     if (!initialized) {
         return error.NotInitialized;
     }
-    //TODO:
+    // 
+    const optr = @ptrCast(opaqueT, obj);
+    const idx: i8 = blk: {
+        var i: i8 = 0;
+        for (Callbacks[@enumToInt(event)].items) |c| {
+            if (c.obj == optr) {
+                break :blk i;
+            }
+            i += 1;
+        }
+        break :blk -1;
+    };
+
+    if (idx == -1) {
+        return error.CallbackNotFound;
+    }
+
+    // remove it if we find it
+    _ = Callbacks[@enumToInt(event)].swapRemove(@intCast(usize,idx));
 }
 
 pub fn send(event: Event) !void {

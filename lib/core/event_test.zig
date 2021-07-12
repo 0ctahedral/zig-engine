@@ -74,3 +74,24 @@ test "multiple events" {
     try event.send(Event{.MouseMoved=.{.x=10,.y=0}});
     try testing.expect(d1.f1 == 34);
 }
+
+test "register and unregister" {
+    d1.f1 = 32;
+
+    event.init(std.heap.page_allocator);
+    defer event.deinit();
+
+    // register and unregister like normal
+    try event.register(EventType.Quit, &d1, dummy.addone);
+    try event.unregister(EventType.Quit, &d1, dummy.addone);
+
+    // make sure nothing happened when we call that event
+    try event.send(Event{.Quit={}});
+    try testing.expect(d1.f1 == 32);
+
+    // unregister for the event we already unregistered for
+    try testing.expectError(
+        error.CallbackNotFound,
+        event.unregister(EventType.Quit, &d1, dummy.addone)
+    );
+}
