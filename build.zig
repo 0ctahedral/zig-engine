@@ -1,38 +1,42 @@
 const std = @import("std");
 
 pub fn build(b: *std.build.Builder) void {
-    // Standard target options allows the person running `zig build` to choose
-    // what target to build for. Here we do not override the defaults, which
-    // means any target is allowed, and the default is native. Other options
-    // for restricting supported target set are available.
     const target = b.standardTargetOptions(.{});
+    const build_mode = b.standardReleaseOptions();
 
-    // Standard release options allow the person running `zig build` to select
-    // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
-    const mode = b.standardReleaseOptions();
+    // sandbox
+    const sandbox = b.addExecutable("sandbox", "sandbox/main.zig");
+    sandbox.setBuildMode(build_mode);
+    linkEngineLib(b, sandbox, "");
+    const sandbox_run_step = b.step("sandbox", "run the sandbox");
+    sandbox_run_step.dependOn(&sandbox.run().step);
 
-    const exe = b.addExecutable("zig-engine", "src/test.zig");
+    // we will also make run shortcut to running the sandbox
+    const run_step = b.step("run", "runs the sandbox");
+    run_step.dependOn(&sandbox.run().step);
 
-    exe.linkSystemLibrary("c");
-    exe.linkSystemLibrary("xcb");
-    exe.linkSystemLibrary("X11-xcb");
+    // TODO: add test steps
+    // TODO: move different iterations of the sandbox into an examples folder
+}
 
-    exe.setTarget(target);
-    exe.setBuildMode(mode);
+// build as library and add to executable
+pub fn linkEngineLib(
+    b: *std.build.Builder,
+    artifact: *std.build.LibExeObjStep,
+    comptime prefix_path: []const u8,
+) void {
+    const build_mode = b.standardReleaseOptions();
 
-    exe.addPackage(.{
-        .name ="engine",
-        .path ="lib/engine.zig",
+    // create the library
+    const lib = b.addSharedLibrary("engine", "lib/engine.zig", .unversioned);
+    lib.setBuildMode(build_mode);
+    lib.linkSystemLibrary("c");
+    lib.linkSystemLibrary("xcb");
+    lib.linkSystemLibrary("X11-xcb");
+    lib.install();
+    artifact.linkLibrary(lib);
+    artifact.addPackage(.{
+        .name = "engine",
+        .path = prefix_path ++ "lib/engine.zig",
     });
-
-    exe.install();
-
-    const run_cmd = exe.run();
-    run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
-
-    const run_step = b.step("run", "Run the app");
-    run_step.dependOn(&run_cmd.step);
 }
