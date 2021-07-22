@@ -1,15 +1,26 @@
 //! This is the renderer front end
+const std = @import("std");
 
 //TODO: change this at compile time to each platform
-const backend = @import("dummy" ++ "/renderer.zig");
+const rendererBackend = enum {
+    vulkan,
+    dummy,
+};
+const render_backend = rendererBackend.dummy;
+const backend = switch(render_backend) {
+    .vulkan => @import("opengl/renderer.zig"),
+    .dummy => @import("dummy/renderer.zig"),
+};
 
 /// Initialize the renderer backend
 pub fn init() !void {
+    std.log.warn("initializing the renderer", .{});
     return backend.init();
 }
 
 /// Shutdown the renderer
 pub fn deinit() void {
+    std.log.warn("shutting down the renderer", .{});
     return backend.deinit();
 }
 

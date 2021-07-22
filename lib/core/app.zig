@@ -2,6 +2,7 @@ const std = @import("std");
 const platform = @import("../platform/platform.zig");
 const input = @import("input.zig");
 const event = @import("event.zig");
+const renderer = @import("../renderer/renderer.zig");
 
 pub const App = struct {
     runFn: fn () void,
@@ -27,6 +28,8 @@ pub const App = struct {
         try self.windows.append(try platform.createWindow("title2", .{.x=100, .y=100, .w=200, .h=200}));
 
         try event.register(event.EventType.Quit, self, quit);
+
+        try renderer.init();
     }
 
     fn quit(self: *Self, e: event.Event) void {
@@ -63,8 +66,9 @@ pub const App = struct {
     }
 
     pub fn deinit(self: *Self) void {
-        input.deinit();
+        renderer.deinit();
         event.deinit();
+        input.deinit();
         // shutdown platform stuff
         for (self.windows.items) |win| {
             platform.destroyWindow(win);
