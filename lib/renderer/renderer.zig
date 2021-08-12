@@ -4,11 +4,14 @@ const std = @import("std");
 //TODO: change this at compile time to each platform
 const rendererBackend = enum {
     vulkan,
+    opengl,
     dummy,
 };
-const render_backend = rendererBackend.dummy;
+
+const render_backend = rendererBackend.opengl;
 const backend = switch(render_backend) {
-    .vulkan => @import("opengl/renderer.zig"),
+    .vulkan => @import("vulkan/renderer.zig"),
+    .opengl => @import("opengl/renderer.zig"),
     .dummy => @import("dummy/renderer.zig"),
 };
 
